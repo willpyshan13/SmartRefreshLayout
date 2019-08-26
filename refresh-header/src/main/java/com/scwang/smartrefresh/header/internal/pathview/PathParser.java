@@ -11,7 +11,6 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.scwang.smartrefresh.header.internal.pathview;
 
 import android.graphics.Matrix;
@@ -213,7 +212,7 @@ class PathParser {
         if ((end - start) == 1 && start < pathData.length()) {
             addNode(list, pathData.charAt(start), new float[0]);
         }
-        return list.toArray(new PathDataNode[list.size()]);
+        return list.toArray(new PathDataNode[0]);
     }
 
 //    /**

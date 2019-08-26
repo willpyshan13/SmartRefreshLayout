@@ -16,14 +16,13 @@ import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
 import com.scwang.smartrefresh.layout.internal.ArrowDrawable;
 import com.scwang.smartrefresh.layout.internal.InternalClassics;
 import com.scwang.smartrefresh.layout.internal.ProgressDrawable;
-import com.scwang.smartrefresh.layout.util.DensityUtil;
+import com.scwang.smartrefresh.layout.util.SmartUtil;
 
 /**
  * 经典上拉底部组件
- * Created by SCWANG on 2017/5/28.
+ * Created by scwang on 2017/5/28.
  */
-
-@SuppressWarnings({"unused", "UnusedReturnValue", "deprecation"})
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ClassicsFooter extends InternalClassics<ClassicsFooter> implements RefreshFooter {
 
     public static String REFRESH_FOOTER_PULLING = null;//"上拉加载更多";
@@ -34,13 +33,13 @@ public class ClassicsFooter extends InternalClassics<ClassicsFooter> implements 
     public static String REFRESH_FOOTER_FAILED = null;//"加载失败";
     public static String REFRESH_FOOTER_NOTHING = null;//"没有更多数据了";
 
-    protected String mTextPulling = null;//"上拉加载更多";
-    protected String mTextRelease = null;//"释放立即加载";
-    protected String mTextLoading = null;//"正在加载...";
-    protected String mTextRefreshing = null;//"正在刷新...";
-    protected String mTextFinish = null;//"加载完成";
-    protected String mTextFailed = null;//"加载失败";
-    protected String mTextNothing = null;//"没有更多数据了";
+    protected String mTextPulling;//"上拉加载更多";
+    protected String mTextRelease;//"释放立即加载";
+    protected String mTextLoading;//"正在加载...";
+    protected String mTextRefreshing;//"正在刷新...";
+    protected String mTextFinish;//"加载完成";
+    protected String mTextFailed;//"加载失败";
+    protected String mTextNothing;//"没有更多数据了";
 
     protected boolean mNoMoreData = false;
 
@@ -50,22 +49,21 @@ public class ClassicsFooter extends InternalClassics<ClassicsFooter> implements 
     }
 
     public ClassicsFooter(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
+        super(context, attrs, 0);
 
-    public ClassicsFooter(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+        View.inflate(context, R.layout.srl_classics_footer, this);
 
         final View thisView = this;
-        final View arrowView = mArrowView;
-        final View progressView = mProgressView;
-        final DensityUtil density = new DensityUtil();
+        final View arrowView = mArrowView = thisView.findViewById(R.id.srl_classics_arrow);
+        final View progressView = mProgressView = thisView.findViewById(R.id.srl_classics_progress);
+
+        mTitleText = thisView.findViewById(R.id.srl_classics_title);
 
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.ClassicsFooter);
 
         LayoutParams lpArrow = (LayoutParams) arrowView.getLayoutParams();
         LayoutParams lpProgress = (LayoutParams) progressView.getLayoutParams();
-        lpProgress.rightMargin = ta.getDimensionPixelSize(R.styleable.ClassicsFooter_srlDrawableMarginRight, density.dip2px(20));
+        lpProgress.rightMargin = ta.getDimensionPixelSize(R.styleable.ClassicsFooter_srlDrawableMarginRight, SmartUtil.dp2px(20));
         lpArrow.rightMargin = lpProgress.rightMargin;
 
         lpArrow.width = ta.getLayoutDimension(R.styleable.ClassicsFooter_srlDrawableArrowSize, lpArrow.width);
@@ -79,11 +77,11 @@ public class ClassicsFooter extends InternalClassics<ClassicsFooter> implements 
         lpProgress.height = ta.getLayoutDimension(R.styleable.ClassicsFooter_srlDrawableSize, lpProgress.height);
 
         mFinishDuration = ta.getInt(R.styleable.ClassicsFooter_srlFinishDuration, mFinishDuration);
-        mSpinnerStyle = SpinnerStyle.values()[ta.getInt(R.styleable.ClassicsFooter_srlClassicsSpinnerStyle, mSpinnerStyle.ordinal())];
+        mSpinnerStyle = SpinnerStyle.values[ta.getInt(R.styleable.ClassicsFooter_srlClassicsSpinnerStyle, mSpinnerStyle.ordinal)];
 
         if (ta.hasValue(R.styleable.ClassicsFooter_srlDrawableArrow)) {
             mArrowView.setImageDrawable(ta.getDrawable(R.styleable.ClassicsFooter_srlDrawableArrow));
-        } else {
+        } else if (mArrowView.getDrawable() == null) {
             mArrowDrawable = new ArrowDrawable();
             mArrowDrawable.setColor(0xff666666);
             mArrowView.setImageDrawable(mArrowDrawable);
@@ -91,16 +89,14 @@ public class ClassicsFooter extends InternalClassics<ClassicsFooter> implements 
 
         if (ta.hasValue(R.styleable.ClassicsFooter_srlDrawableProgress)) {
             mProgressView.setImageDrawable(ta.getDrawable(R.styleable.ClassicsFooter_srlDrawableProgress));
-        } else {
+        } else if (mProgressView.getDrawable() == null) {
             mProgressDrawable = new ProgressDrawable();
             mProgressDrawable.setColor(0xff666666);
             mProgressView.setImageDrawable(mProgressDrawable);
         }
 
         if (ta.hasValue(R.styleable.ClassicsFooter_srlTextSizeTitle)) {
-            mTitleText.setTextSize(TypedValue.COMPLEX_UNIT_PX, ta.getDimensionPixelSize(R.styleable.ClassicsFooter_srlTextSizeTitle, DensityUtil.dp2px(16)));
-        } else {
-            mTitleText.setTextSize(16);
+            mTitleText.setTextSize(TypedValue.COMPLEX_UNIT_PX, ta.getDimensionPixelSize(R.styleable.ClassicsFooter_srlTextSizeTitle, SmartUtil.dp2px(16)));
         }
 
         if (ta.hasValue(R.styleable.ClassicsFooter_srlPrimaryColor)) {
@@ -162,19 +158,19 @@ public class ClassicsFooter extends InternalClassics<ClassicsFooter> implements 
 
         ta.recycle();
 
-        mTitleText.setTextColor(0xff666666);
+        progressView.animate().setInterpolator(null);
         mTitleText.setText(thisView.isInEditMode() ? mTextLoading : mTextPulling);
-    }
 
-//    @Override
-//    protected ClassicsFooter self() {
-//        return this;
-//    }
+        if (thisView.isInEditMode()) {
+            arrowView.setVisibility(GONE);
+        } else {
+            progressView.setVisibility(GONE);
+        }
+    }
 
     //</editor-fold>
 
     //<editor-fold desc="RefreshFooter">
-
     @Override
     public void onStartAnimator(@NonNull RefreshLayout refreshLayout, int height, int maxDragHeight) {
         if (!mNoMoreData) {

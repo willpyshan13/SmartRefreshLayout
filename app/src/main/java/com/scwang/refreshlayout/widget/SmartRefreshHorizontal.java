@@ -35,7 +35,7 @@ public class SmartRefreshHorizontal extends FrameLayout implements RefreshLayout
 
     public SmartRefreshHorizontal(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mRefreshLayout = new SmartRefreshContent(context, attrs, defStyleAttr);
+        mRefreshLayout = new SmartRefreshContent(context, attrs);
         mRefreshLayout.setEnableAutoLoadMore(false);
         mRefreshLayout.setScrollBoundaryDecider(new ScrollBoundaryDeciderAdapter(){
             @Override
@@ -349,8 +349,13 @@ public class SmartRefreshHorizontal extends FrameLayout implements RefreshLayout
     }
 
     @Override
-    public RefreshLayout finishRefresh(int delayed, boolean success) {
-        return mRefreshLayout.finishRefresh(delayed, success);
+    public RefreshLayout finishRefresh(int delayed, boolean success, Boolean noMoreData) {
+        return mRefreshLayout.finishRefresh(delayed, success, noMoreData);
+    }
+
+    @Override
+    public RefreshLayout finishRefreshWithNoMoreData() {
+        return mRefreshLayout.finishRefreshWithNoMoreData();
     }
 
     @Override
@@ -444,11 +449,11 @@ public class SmartRefreshHorizontal extends FrameLayout implements RefreshLayout
         return mRefreshLayout.autoLoadMore();
     }
 
-    @Override
-    @Deprecated
-    public boolean autoLoadMore(int delayed) {
-        return mRefreshLayout.autoLoadMore(delayed);
-    }
+//    @Override
+//    @Deprecated
+//    public boolean autoLoadMore(int delayed) {
+//        return mRefreshLayout.autoLoadMore(delayed);
+//    }
 
     @Override
     public boolean autoLoadMoreAnimationOnly() {

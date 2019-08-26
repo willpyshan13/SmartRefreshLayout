@@ -16,7 +16,7 @@ import com.scwang.smartrefresh.layout.api.RefreshKernel;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.RefreshState;
 import com.scwang.smartrefresh.layout.internal.InternalAbstract;
-import com.scwang.smartrefresh.layout.util.DensityUtil;
+import com.scwang.smartrefresh.layout.util.SmartUtil;
 
 import static android.view.View.MeasureSpec.EXACTLY;
 import static android.view.View.MeasureSpec.makeMeasureSpec;
@@ -24,7 +24,7 @@ import static android.view.View.MeasureSpec.makeMeasureSpec;
 /**
  * 虚假的 Footer
  * 用于 正真的 Footer 在 RefreshLayout 外部时，
- * Created by SCWANG on 2017/6/14.
+ * Created by scwang on 2017/6/14.
  */
 @SuppressWarnings("unused")
 public class FalsifyFooter extends InternalAbstract implements RefreshFooter {
@@ -37,11 +37,7 @@ public class FalsifyFooter extends InternalAbstract implements RefreshFooter {
     }
 
     public FalsifyFooter(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public FalsifyFooter(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+        super(context, attrs, 0);
     }
 
     @Override
@@ -49,17 +45,18 @@ public class FalsifyFooter extends InternalAbstract implements RefreshFooter {
         super.dispatchDraw(canvas);
         final View thisView = this;
         if (thisView.isInEditMode()) {//这段代码在运行时不会执行，只会在Studio编辑预览时运行，不用在意性能问题
-            int d = DensityUtil.dp2px(5);
+            final int d = SmartUtil.dp2px(5);
+            final Context context = thisView.getContext();
 
             Paint paint = new Paint();
             paint.setStyle(Paint.Style.STROKE);
             paint.setColor(0xcccccccc);
-            paint.setStrokeWidth(DensityUtil.dp2px(1));
+            paint.setStrokeWidth(SmartUtil.dp2px(1));
             paint.setPathEffect(new DashPathEffect(new float[]{d, d, d, d}, 1));
             canvas.drawRect(d, d, thisView.getWidth() - d, thisView.getBottom() - d, paint);
 
-            TextView textView = new TextView(thisView.getContext());
-            textView.setText(thisView.getResources().getString(R.string.srl_component_falsify, getClass().getSimpleName(), DensityUtil.px2dp(thisView.getHeight())));
+            TextView textView = new TextView(context);
+            textView.setText(context.getString(R.string.srl_component_falsify, getClass().getSimpleName(), SmartUtil.px2dp(thisView.getHeight())));
             textView.setTextColor(0xcccccccc);
             textView.setGravity(Gravity.CENTER);
             //noinspection UnnecessaryLocalVariable
@@ -72,7 +69,6 @@ public class FalsifyFooter extends InternalAbstract implements RefreshFooter {
     //</editor-fold>
 
     //<editor-fold desc="RefreshFooter">
-
     @Override
     public void onInitialized(@NonNull RefreshKernel kernel, int height, int maxDragHeight) {
         mRefreshKernel = kernel;
@@ -90,11 +86,10 @@ public class FalsifyFooter extends InternalAbstract implements RefreshFooter {
         }
     }
 
-    @Override
-    public boolean setNoMoreData(boolean noMoreData) {
-        return false;
-    }
-
+//    @Override
+//    public boolean setNoMoreData(boolean noMoreData) {
+//        return false;
+//    }
     //</editor-fold>
 
 }

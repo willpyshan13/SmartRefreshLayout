@@ -17,11 +17,11 @@ import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.RefreshState;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
 import com.scwang.smartrefresh.layout.internal.InternalAbstract;
-import com.scwang.smartrefresh.layout.util.DensityUtil;
+import com.scwang.smartrefresh.layout.util.SmartUtil;
 
 /**
  * Refresh your delivery!
- * Created by SCWANG on 2017/6/25.
+ * Created by scwang on 2017/6/25.
  * design https://dribbble.com/shots/2753803-Refresh-your-delivery
  */
 public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
@@ -78,12 +78,15 @@ public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
     protected int mCloudX1;
     protected int mCloudX2;
     protected int mCloudX3;
+    protected int mHeight;
     protected int mHeaderHeight;
+    protected int mBackgroundColor;
     protected float mAppreciation;
     protected RefreshState mState;
     protected Drawable mCloudDrawable;
     protected Drawable mUmbrellaDrawable;
     protected Drawable mBoxDrawable;
+    protected RefreshKernel mKernel;
     //</editor-fold>
 
     //<editor-fold desc="View">
@@ -92,16 +95,12 @@ public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
     }
 
     public DeliveryHeader(Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
+        super(context, attrs, 0);
 
-    public DeliveryHeader(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-
-        mSpinnerStyle = SpinnerStyle.Scale;
+        mSpinnerStyle = SpinnerStyle.FixedBehind;
 
         final View thisView = this;
-        thisView.setMinimumHeight(DensityUtil.dp2px(150));
+        thisView.setMinimumHeight(SmartUtil.dp2px(150));
 
         PathsDrawable cloudDrawable = new PathsDrawable();
         if (!cloudDrawable.parserPaths(cloudPaths)) {
@@ -109,21 +108,21 @@ public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
         }
 //        cloudDrawable.printOriginal("cloudDrawable");
         cloudDrawable.parserColors(cloudColors);
-        cloudDrawable.setGeometricHeight(DensityUtil.dp2px(20));
+        cloudDrawable.setGeometricHeight(SmartUtil.dp2px(20));
         PathsDrawable umbrellaDrawable = new PathsDrawable();
         if (!umbrellaDrawable.parserPaths(umbrellaPaths)) {
             umbrellaDrawable.declareOriginal(2, 4, 265, 355);
         }
 //        umbrellaDrawable.printOriginal("umbrellaDrawable");
         umbrellaDrawable.parserColors(umbrellaColors);
-        umbrellaDrawable.setGeometricWidth(DensityUtil.dp2px(200));
+        umbrellaDrawable.setGeometricWidth(SmartUtil.dp2px(200));
         PathsDrawable boxDrawable = new PathsDrawable();
         if (!boxDrawable.parserPaths(boxPaths)) {
             boxDrawable.declareOriginal(0, 1, 95, 92);
         }
 //        boxDrawable.printOriginal("boxDrawable");
         boxDrawable.parserColors(boxColors);
-        boxDrawable.setGeometricWidth(DensityUtil.dp2px(50));
+        boxDrawable.setGeometricWidth(SmartUtil.dp2px(50));
         mBoxDrawable = boxDrawable;
         mCloudDrawable = cloudDrawable;
         mUmbrellaDrawable = umbrellaDrawable;
@@ -136,18 +135,55 @@ public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
             mCloudX3 = (int)(mCloudDrawable.getBounds().width()*2.0f);
         }
     }
+    //</editor-fold>
 
+    //<editor-fold desc="draw">
     @Override
     protected void dispatchDraw(Canvas canvas) {
         final View thisView = this;
         final int width = thisView.getWidth();
-        final int height = thisView.getHeight();
-
+        final int height = mHeight;//thisView.getHeight();
         final int saveCount = canvas.getSaveCount();
+        //noinspection EqualsBetweenInconvertibleTypes
+        final boolean footer = mKernel != null && (this.equals(mKernel.getRefreshLayout().getRefreshFooter()));
+
         canvas.save();
+
+        if (footer) {
+            canvas.translate(0, thisView.getHeight() - mHeight);
+        }
 
         int shake = (int) (mHeaderHeight / 13 * Math.sin(mAppreciation));
 
+        drawCloud(canvas, width);
+        drawBox(canvas, width, height, shake);
+        drawUmbrella(canvas, width, height, shake);
+
+        canvas.restoreToCount(saveCount);
+
+        super.dispatchDraw(canvas);
+    }
+
+    protected void drawBox(Canvas canvas, int width, int height, int shake) {
+        final int centerY = height - mHeaderHeight / 2 + shake;
+        final int centerYBox = centerY + (mHeaderHeight / 2 - mBoxDrawable.getBounds().height())
+                - Math.min(mHeaderHeight / 2 - mBoxDrawable.getBounds().height(), SmartUtil.dp2px(mAppreciation * 100));
+        mBoxDrawable.getBounds().offsetTo(width / 2 - mBoxDrawable.getBounds().width() / 2, centerYBox - mBoxDrawable.getBounds().height() / 4);
+        mBoxDrawable.draw(canvas);
+    }
+
+    protected void drawUmbrella(Canvas canvas, int width, int height, int shake) {
+        if (mState == RefreshState.Refreshing
+                || mState == RefreshState.RefreshFinish) {
+            Rect bounds = mUmbrellaDrawable.getBounds();
+            final int centerY = height - mHeaderHeight / 2 + shake;
+            final int centerYUmbrella = centerY - mHeaderHeight + Math.min(mHeaderHeight, SmartUtil.dp2px(mAppreciation * 100));
+            mUmbrellaDrawable.getBounds().offsetTo(width / 2 - bounds.width() / 2, centerYUmbrella - bounds.height());
+            mUmbrellaDrawable.draw(canvas);
+        }
+    }
+
+    protected void drawCloud(Canvas canvas, int width) {
         if (mState == RefreshState.Refreshing
                 || mState == RefreshState.RefreshFinish) {
             mCloudDrawable.getBounds().offsetTo(mCloudX1, mHeaderHeight / 3);
@@ -156,33 +192,15 @@ public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
             mCloudDrawable.draw(canvas);
             mCloudDrawable.getBounds().offsetTo(mCloudX3, mHeaderHeight * 2 / 3);
             mCloudDrawable.draw(canvas);
-            canvas.rotate(5 * (float) Math.sin(mAppreciation / 2), width / 2 , mHeaderHeight / 2 - mUmbrellaDrawable.getBounds().height());
+            canvas.rotate(5 * (float) Math.sin(mAppreciation / 2), width / 2f , mHeaderHeight / 2f - mUmbrellaDrawable.getBounds().height());
             calculateFrame(width);
         }
-
-        final int centerY = height - mHeaderHeight / 2 + shake;
-        final int centerYBox = centerY + (mHeaderHeight / 2 - mBoxDrawable.getBounds().height())
-                - Math.min(mHeaderHeight / 2 - mBoxDrawable.getBounds().height(), DensityUtil.dp2px(mAppreciation * 100));
-        mBoxDrawable.getBounds().offsetTo(width / 2 - mBoxDrawable.getBounds().width() / 2, centerYBox - mBoxDrawable.getBounds().height() / 4);
-        mBoxDrawable.draw(canvas);
-
-        if (mState == RefreshState.Refreshing
-                || mState == RefreshState.RefreshFinish) {
-            Rect bounds = mUmbrellaDrawable.getBounds();
-            final int centerYUmbrella = centerY - mHeaderHeight + Math.min(mHeaderHeight, DensityUtil.dp2px(mAppreciation * 100));
-            mUmbrellaDrawable.getBounds().offsetTo(width / 2 - bounds.width() / 2, centerYUmbrella - bounds.height());
-            mUmbrellaDrawable.draw(canvas);
-        }
-
-        canvas.restoreToCount(saveCount);
-
-        super.dispatchDraw(canvas);
     }
 
-    private void calculateFrame(int width) {
-        mCloudX1 += DensityUtil.dp2px(9);
-        mCloudX2 += DensityUtil.dp2px(5);
-        mCloudX3 += DensityUtil.dp2px(12);
+    protected void calculateFrame(int width) {
+        mCloudX1 += SmartUtil.dp2px(9);
+        mCloudX2 += SmartUtil.dp2px(5);
+        mCloudX3 += SmartUtil.dp2px(12);
         int cloudWidth = mCloudDrawable.getBounds().width();
         if (mCloudX1 > width + cloudWidth) {
             mCloudX1 = -cloudWidth;
@@ -193,37 +211,30 @@ public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
         if (mCloudX3 > width + cloudWidth) {
             mCloudX3 = -cloudWidth;
         }
-
         mAppreciation += 0.1f;
         final View thisView = this;
         thisView.invalidate();
     }
-
     //</editor-fold>
 
-
     //<editor-fold desc="RefreshHeader">
-
     @Override
-    public void onMoving(boolean isDragging, float percent, int offset, int height, int maxDragHeight) {
-        if (mState != RefreshState.Refreshing) {
-            mBoxDrawable.setAlpha((int) (255 * (1f - Math.max(0, percent - 1))));
+    public void onInitialized(@NonNull RefreshKernel kernel, int height, int maxDragHeight) {
+        mKernel = kernel;
+        mHeaderHeight = height;
+        if (mBackgroundColor != 0) {
+            mKernel.requestDrawBackgroundFor(this, mBackgroundColor);
         }
     }
 
-//    @Override
-//    public void onPulling(float percent, int offset, int height, int maxDragHeight) {
-//        if (mState != RefreshState.Refreshing) {
-//            mBoxDrawable.setAlpha((int) (255 * (1f - Math.max(0, percent - 1))));
-//        }
-//    }
-//
-//    @Override
-//    public void onReleasing(float percent, int offset, int height, int maxDragHeight) {
-//        if (mState != RefreshState.Refreshing) {
-//            mBoxDrawable.setAlpha((int) (255 * (1f - Math.max(0, percent - 1))));
-//        }
-//    }
+    @Override
+    public void onMoving(boolean isDragging, float percent, int offset, int height, int maxDragHeight) {
+        mHeight = offset;
+        if (mState != RefreshState.Refreshing) {
+            mBoxDrawable.setAlpha((int) (255 * (1f - Math.max(0, percent - 1))));
+        }
+        this.invalidate();
+    }
 
     @Override
     public void onReleased(@NonNull RefreshLayout layout, int height, int maxDragHeight) {
@@ -239,12 +250,6 @@ public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
         }
     }
 
-//    @NonNull
-//    @Override
-//    public SpinnerStyle getSpinnerStyle() {
-//        return SpinnerStyle.Scale;
-//    }
-
     /**
      * @param colors 对应Xml中配置的 srlPrimaryColor srlAccentColor
      * @deprecated 请使用 {@link RefreshLayout#setPrimaryColorsId(int...)}
@@ -252,17 +257,14 @@ public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
     @Override@Deprecated
     public void setPrimaryColors(@ColorInt int ... colors) {
         if (colors.length > 0) {
-            final View thisView = this;
-            thisView.setBackgroundColor(colors[0]);
+            mBackgroundColor = colors[0];
+            if (mKernel != null) {
+                mKernel.requestDrawBackgroundFor(this, mBackgroundColor);
+            }
             if (colors.length > 1 && mCloudDrawable instanceof PathsDrawable) {
                 ((PathsDrawable) mCloudDrawable).parserColors(colors[1]);
             }
         }
-    }
-
-    @Override
-    public void onInitialized(@NonNull RefreshKernel kernel, int height, int maxDragHeight) {
-        mHeaderHeight = height;
     }
 
     @Override
@@ -272,6 +274,5 @@ public class DeliveryHeader extends InternalAbstract implements RefreshHeader {
         final View thisView = this;
         thisView.invalidate();
     }
-
     //</editor-fold>
 }

@@ -18,7 +18,7 @@ import com.scwang.smartrefresh.header.R;
 
 /**
  * 山丘树木场景视图
- * Created by jing on 2015-5-28.
+ * Created by scwang on 2018/5/28.
  * from https://github.com/race604/FlyRefresh
  */
 @SuppressWarnings("UnnecessaryLocalVariable")
@@ -61,7 +61,6 @@ public class MountainSceneView extends View {
     protected int mViewportHeight = 0;
 
     //<editor-fold desc="MountainSceneView">
-
     public MountainSceneView(Context context) {
         this(context, null);
     }
@@ -104,7 +103,7 @@ public class MountainSceneView extends View {
         updateTreePath(mMoveFactor, true);
     }
 
-    private void updateMountainPath(float factor,int height) {
+    protected void updateMountainPath(float factor,int height) {
 
         mTransMatrix.reset();
         mTransMatrix.setScale(mScaleX, mScaleY);
@@ -143,7 +142,7 @@ public class MountainSceneView extends View {
         mMount3.transform(mTransMatrix);
     }
 
-    private void updateTreePath(float factor, boolean force) {
+    protected void updateTreePath(float factor, boolean force) {
         if (factor == mTreeBendFactor && !force) {
             return;
         }
@@ -213,7 +212,7 @@ public class MountainSceneView extends View {
 
     }
 
-    private void drawTree(Canvas canvas, float scale, float baseX, float baseY,
+    protected void drawTree(Canvas canvas, float scale, float baseX, float baseY,
                           int colorTrunk, int colorBranch) {
         canvas.save();
 
@@ -242,7 +241,7 @@ public class MountainSceneView extends View {
         canvas.drawPath(mMount1, mMountPaint);
 
         canvas.save();
-        canvas.scale(-1, 1, thisView.getWidth() / 2, 0);
+        canvas.scale(-1, 1, thisView.getWidth() / 2f, 0);
         drawTree(canvas, 0.12f * mScaleX, 180 * mScaleX, (93 + 20 * mMoveFactor) * mScaleY,
                 COLOR_TREE_3_BRINK, COLOR_TREE_3_BRANCH);
         drawTree(canvas, 0.1f * mScaleX, 200 * mScaleX, (96 + 20 * mMoveFactor) * mScaleY,
@@ -263,7 +262,6 @@ public class MountainSceneView extends View {
         mMountPaint.setColor(COLOR_MOUNTAIN_3);
         canvas.drawPath(mMount3, mMountPaint);
     }
-
     //</editor-fold>
 
     public void setPrimaryColor(@ColorInt int color) {

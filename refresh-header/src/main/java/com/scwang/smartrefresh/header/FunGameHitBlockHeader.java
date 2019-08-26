@@ -12,14 +12,13 @@ import android.view.View;
 
 import com.scwang.smartrefresh.header.fungame.FunGameView;
 import com.scwang.smartrefresh.layout.api.RefreshKernel;
-import com.scwang.smartrefresh.layout.util.DensityUtil;
+import com.scwang.smartrefresh.layout.util.SmartUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Hitomis on 2016/2/29.
- * email:196425254@qq.com
+ * Created by scwang on 2016/2/29.
  * from https://github.com/Hitomis/FunGameRefresh
  */
 public class FunGameHitBlockHeader extends FunGameView {
@@ -98,27 +97,23 @@ public class FunGameHitBlockHeader extends FunGameView {
     }
 
     public FunGameHitBlockHeader(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public FunGameHitBlockHeader(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+        super(context, attrs, 0);
 
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.FunGameHitBlockHeader);
-        speed = ta.getInt(R.styleable.FunGameHitBlockHeader_fghBallSpeed, DensityUtil.dp2px(SPEED));
+        speed = ta.getInt(R.styleable.FunGameHitBlockHeader_fghBallSpeed, SmartUtil.dp2px(SPEED));
         blockHorizontalNum = ta.getInt(R.styleable.FunGameHitBlockHeader_fghBlockHorizontalNum, BLOCK_HORIZONTAL_NUM);
         ta.recycle();
 
         blockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         blockPaint.setStyle(Paint.Style.FILL);
-        BALL_RADIUS = DensityUtil.dp2px(4);
+        BALL_RADIUS = SmartUtil.dp2px(4);
     }
 
     @Override
     public void onInitialized(@NonNull RefreshKernel kernel, int height, int maxDragHeight) {
         final View thisView = this;
         final int measuredWidth = thisView.getMeasuredWidth();
-        blockHeight = height / BLOCK_VERTICAL_NUM - DIVIDING_LINE_SIZE;
+        blockHeight = 1f * height / BLOCK_VERTICAL_NUM - DIVIDING_LINE_SIZE;
         blockWidth = measuredWidth * BLOCK_WIDTH_RATIO;
 
         blockLeft = measuredWidth * BLOCK_POSITION_RATIO;

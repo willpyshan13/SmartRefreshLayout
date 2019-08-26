@@ -16,9 +16,8 @@ import com.squareup.leakcanary.LeakCanary;
 
 /**
  *
- * Created by SCWANG on 2017/6/11.
+ * Created by scwang on 2017/6/11.
  */
-
 public class App extends Application {
 
     static {
@@ -34,6 +33,7 @@ public class App extends Application {
                 layout.setEnableOverScrollBounce(true);
                 layout.setEnableLoadMoreWhenContentNotFull(true);
                 layout.setEnableScrollContentWhenRefreshed(true);
+                layout.setPrimaryColorsId(R.color.colorPrimary, android.R.color.white);
             }
         });
         SmartRefreshLayout.setDefaultRefreshHeaderCreator(new DefaultRefreshHeaderCreator() {
@@ -41,8 +41,6 @@ public class App extends Application {
             @Override
             public RefreshHeader createRefreshHeader(@NonNull Context context, @NonNull RefreshLayout layout) {
                 //全局设置主题颜色（优先级第二低，可以覆盖 DefaultRefreshInitializer 的配置，与下面的ClassicsHeader绑定）
-                layout.setPrimaryColorsId(R.color.colorPrimary, android.R.color.white);
-
                 return new ClassicsHeader(context).setTimeFormat(new DynamicTimeFormat("更新于 %s"));
             }
         });

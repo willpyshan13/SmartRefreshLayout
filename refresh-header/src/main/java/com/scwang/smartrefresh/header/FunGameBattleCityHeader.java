@@ -11,15 +11,14 @@ import android.view.View;
 
 import com.scwang.smartrefresh.header.fungame.FunGameView;
 import com.scwang.smartrefresh.layout.api.RefreshKernel;
-import com.scwang.smartrefresh.layout.util.DensityUtil;
+import com.scwang.smartrefresh.layout.util.SmartUtil;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
 /**
- * Created by Hitomis on 2016/3/09.
- * email:196425254@qq.com
+ * Created by scwang on 2016/3/09.
  * from https://github.com/Hitomis/FunGameRefresh
  */
 public class FunGameBattleCityHeader extends FunGameView {
@@ -129,12 +128,7 @@ public class FunGameBattleCityHeader extends FunGameView {
     }
 
     public FunGameBattleCityHeader(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public FunGameBattleCityHeader(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-
+        super(context, attrs, 0);
         random = new Random();
     }
 
@@ -145,17 +139,15 @@ public class FunGameBattleCityHeader extends FunGameView {
         bulletRadius = (barrelSize - 2 * DIVIDING_LINE_SIZE) * .5f;
         super.onInitialized(kernel, height, maxDragHeight);
     }
-
     //</editor-fold>
 
     //<editor-fold desc="游戏控制">
-
     protected void resetConfigParams() {
         status = FunGameView.STATUS_GAME_PREPARE;
         controllerPosition = DIVIDING_LINE_SIZE;
 
-        enemySpeed = DensityUtil.dp2px(1);
-        bulletSpeed = DensityUtil.dp2px(4);
+        enemySpeed = SmartUtil.dp2px(1);
+        bulletSpeed = SmartUtil.dp2px(4);
 
         levelNum = DEFAULT_TANK_MAGIC_TOTAL_NUM;
         wipeOutNum = 0;
@@ -221,8 +213,8 @@ public class FunGameBattleCityHeader extends FunGameView {
      */
     protected void upLevel() {
         levelNum += DEFAULT_TANK_MAGIC_TOTAL_NUM;
-        enemySpeed += DensityUtil.dp2px(1);
-        bulletSpeed += DensityUtil.dp2px(1);
+        enemySpeed += SmartUtil.dp2px(1);
+        bulletSpeed += SmartUtil.dp2px(1);
         wipeOutNum = 0;
 
         if (enemyTankSpace > 12)
@@ -258,7 +250,6 @@ public class FunGameBattleCityHeader extends FunGameView {
     //</editor-fold>
 
     //<editor-fold desc="绘制方法">
-
     @Override
     protected void drawGame(Canvas canvas, int width, int height) {
         drawSelfTank(canvas,width);
@@ -407,7 +398,6 @@ public class FunGameBattleCityHeader extends FunGameView {
         canvas.drawRect(rectF.right, barrelTop, rectF.right + barrelSize, barrelTop + barrelSize, mPaint);
 
     }
-
     //</editor-fold>
 
 }

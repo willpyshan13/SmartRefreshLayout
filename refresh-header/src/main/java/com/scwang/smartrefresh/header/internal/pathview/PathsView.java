@@ -8,11 +8,11 @@ import android.view.View;
 
 /**
  * 路径视图
- * Created by SCWANG on 2017/5/29.
+ * Created by scwang on 2017/5/29.
  */
 public class PathsView extends View {
 
-    protected PathsDrawable mPathsDrawable = new PathsDrawable();
+    protected PathsDrawable mPathsDrawable;
 
     public PathsView(Context context) {
         this(context, null);

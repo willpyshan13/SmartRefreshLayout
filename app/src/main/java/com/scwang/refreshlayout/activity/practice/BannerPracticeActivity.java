@@ -1,6 +1,7 @@
 package com.scwang.refreshlayout.activity.practice;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.chad.library.adapter.base.BaseQuickAdapter;
@@ -23,10 +25,15 @@ import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 import com.youth.banner.Banner;
+import com.youth.banner.BannerConfig;
+import com.youth.banner.listener.OnBannerListener;
 import com.youth.banner.loader.ImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static android.support.v7.widget.DividerItemDecoration.VERTICAL;
 
@@ -75,11 +82,18 @@ public class BannerPracticeActivity extends AppCompatActivity {
                 },2000);
             }
         });
+//        refreshLayout.setOnLoadMoreListener(new OnLoadMoreListener() {
+//            @Override
+//            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
+//                mAdapter.addData(movies);
+//                refreshLayout.finishLoadMoreWithNoMoreData();
+//            }
+//        });
         refreshLayout.setOnLoadMoreListener(new OnLoadMoreListener() {
             @Override
-            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
+            public void onLoadMore(@NonNull RefreshLayout rl) {
                 mAdapter.addData(movies);
-                refreshLayout.finishLoadMoreWithNoMoreData();
+                rl.finishLoadMoreWithNoMoreData();
             }
         });
 
@@ -89,6 +103,22 @@ public class BannerPracticeActivity extends AppCompatActivity {
         Banner banner = (Banner) header;
         banner.setImageLoader(new GlideImageLoader());
         banner.setImages(BANNER_ITEMS);
+        banner.setOnBannerListener(new OnBannerListener() {
+            @Override
+            public void OnBannerClick(int i) {
+                Toast.makeText(BannerPracticeActivity.this, "点击了第" + i + "页", Toast.LENGTH_SHORT).show();
+            }
+        });
+        if (Build.VERSION.SDK_INT > 26) {
+            Stream<String> stream = BANNER_ITEMS.stream().map(new Function<BannerItem, String>() {
+                @Override
+                public String apply(BannerItem bannerItem) {
+                    return bannerItem.title;
+                }
+            });
+            banner.setBannerStyle(BannerConfig.CIRCLE_INDICATOR_TITLE_INSIDE);
+            banner.setBannerTitles(stream.collect(Collectors.<String>toList()));
+        }
         banner.start();
         mAdapter.addHeaderView(banner);
         mAdapter.openLoadAnimation();

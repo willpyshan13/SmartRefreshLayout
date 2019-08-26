@@ -18,7 +18,7 @@ import com.scwang.smartrefresh.layout.listener.OnRefreshLoadMoreListener;
 /**
  * 刷新布局
  * interface of the refresh layout
- * Created by SCWANG on 2017/5/26.
+ * Created by scwang on 2017/5/26.
  */
 @SuppressWarnings({"UnusedReturnValue", "SameParameterValue", "unused"})
 public interface RefreshLayout {
@@ -62,15 +62,16 @@ public interface RefreshLayout {
     RefreshLayout setHeaderInsetStart(float dp);
 
 //    /**
-//     * 设置 Header 起始偏移量
-//     * @param insetPx 像素
+//     * Set the Header's start offset（see srlHeaderInsetStart in the RepastPracticeActivity XML in demo-app for the practical application）.
+//     * 设置 Header 起始偏移量（使用方法参考 demo-app 中的 RepastPracticeActivity xml 中的 srlHeaderInsetStart）
+//     * @param px 像素
 //     * @return RefreshLayout
 //     */
-//    RefreshLayout setHeaderInsetStartPx(int insetPx);
+//    RefreshLayout setHeaderInsetStartPx(int px);
 
     /**
-     * Set the Header's start offset.
-     * 设置 Footer 起始偏移量（用户和 setHeaderInsetStart 一样）
+     * Set the Footer's start offset.
+     * 设置 Footer 起始偏移量（用处和 setHeaderInsetStart 一样）
      * @see RefreshLayout#setHeaderInsetStart(float)
      * @param dp Density-independent Pixels 虚拟像素（px需要调用px2dp转换）
      * @return RefreshLayout
@@ -78,11 +79,12 @@ public interface RefreshLayout {
     RefreshLayout setFooterInsetStart(float dp);
 
 //    /**
-//     * 设置 Footer 起始偏移量
-//     * @param insetPx 像素
+//     * Set the Footer's start offset.
+//     * 设置 Footer 起始偏移量（用处和 setFooterInsetStartPx 一样）
+//     * @param px 像素
 //     * @return RefreshLayout
 //     */
-//    RefreshLayout setFooterInsetStartPx(int insetPx);
+//    RefreshLayout setFooterInsetStartPx(int px);
 
     /**
      * Set the damping effect.
@@ -451,9 +453,17 @@ public interface RefreshLayout {
      * 完成刷新
      * @param delayed 开始延时
      * @param success 数据是否成功刷新 （会影响到上次更新时间的改变）
+     * @param noMoreData 是否有更多数据
      * @return RefreshLayout
      */
-    RefreshLayout finishRefresh(int delayed, boolean success);
+    RefreshLayout finishRefresh(int delayed, boolean success, Boolean noMoreData);
+
+    /**
+     * finish load more with no more data.
+     * 完成刷新并标记没有更多数据
+     * @return RefreshLayout
+     */
+    RefreshLayout finishRefreshWithNoMoreData();
 
     /**
      * finish load more.
@@ -504,12 +514,14 @@ public interface RefreshLayout {
 
     /**
      * Restore the original state after finishLoadMoreWithNoMoreData.
-     * 恢复没有更多数据的原始状态
-     * @deprecated use {@link RefreshLayout#resetNoMoreData()} and {@link RefreshLayout#finishLoadMoreWithNoMoreData()}
+     * 设置没有更多数据的状态
      * @param noMoreData 是否有更多数据
      * @return RefreshLayout
+     * 尽量使用下面三个方法代替，他们可以让状态切换与动画结束合拍
+     *      use {@link RefreshLayout#resetNoMoreData()}
+     *      use {@link RefreshLayout#finishRefreshWithNoMoreData()}
+     *      use {@link RefreshLayout#finishLoadMoreWithNoMoreData()}
      */
-    @Deprecated
     RefreshLayout setNoMoreData(boolean noMoreData);
 
     /**
@@ -566,7 +578,7 @@ public interface RefreshLayout {
      * @return true or false, Status non-compliance will fail.
      *         是否成功（状态不符合会失败）
      */
-    @Deprecated
+//    @Deprecated
     boolean autoRefresh(int delayed);
 
     /**
@@ -582,7 +594,7 @@ public interface RefreshLayout {
      * 显示刷新动画并且触发刷新事件
      * @param delayed 开始延时
      * @param duration 拖拽动画持续时间
-     * @param dragRate 拉拽的高度比率（要求 ≥ 1 ）
+     * @param dragRate 拉拽的高度比率
      * @param animationOnly animation only 只有动画
      * @return true or false, Status non-compliance will fail.
      *         是否成功（状态不符合会失败）
@@ -597,15 +609,15 @@ public interface RefreshLayout {
      */
     boolean autoLoadMore();
 
-    /**
-     * Display load more animation and trigger load more event, Delayed start.
-     * 显示加载动画并且触发刷新事件, 延时启动
-     * @param delayed 开始延时
-     * @return true or false, Status non-compliance will fail.
-     *         是否成功（状态不符合会失败）
-     */
-    @Deprecated
-    boolean autoLoadMore(int delayed);
+//    /**
+//     * Display load more animation and trigger load more event, Delayed start.
+//     * 显示加载动画并且触发刷新事件, 延时启动
+//     * @param delayed 开始延时
+//     * @return true or false, Status non-compliance will fail.
+//     *         是否成功（状态不符合会失败）
+//     */
+//    @Deprecated
+//    boolean autoLoadMore(int delayed);
 
     /**
      * Display load more animation without triggering events.
@@ -620,7 +632,7 @@ public interface RefreshLayout {
      * 显示加载动画, 多功能选项
      * @param delayed 开始延时
      * @param duration 拖拽动画持续时间
-     * @param dragRate 拉拽的高度比率（要求 ≥ 1 ）
+     * @param dragRate 拉拽的高度比率
      * @param animationOnly 是否只是显示动画，不回调
      * @return true or false, Status non-compliance will fail.
      *         是否成功（状态不符合会失败）

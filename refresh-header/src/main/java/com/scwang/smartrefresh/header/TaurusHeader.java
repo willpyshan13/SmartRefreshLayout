@@ -18,10 +18,11 @@ import android.view.animation.Transformation;
 
 import com.scwang.smartrefresh.header.internal.pathview.PathsDrawable;
 import com.scwang.smartrefresh.layout.api.RefreshHeader;
+import com.scwang.smartrefresh.layout.api.RefreshKernel;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
 import com.scwang.smartrefresh.layout.internal.InternalAbstract;
-import com.scwang.smartrefresh.layout.util.DensityUtil;
+import com.scwang.smartrefresh.layout.util.SmartUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,7 @@ import java.util.Random;
 
 /**
  * Taurus
- * Created by SCWANG on 2017/5/31.
+ * Created by scwang on 2017/5/31.
  * from https://github.com/Yalantis/Taurus
  */
 public class TaurusHeader extends InternalAbstract implements RefreshHeader {
@@ -80,6 +81,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
     protected Drawable mCloudCenter;
     protected Matrix mMatrix;
     protected float mPercent;
+    protected int mHeight;
     protected int mHeaderHeight;
     protected Animation mAnimation;
 
@@ -88,7 +90,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
     protected float mLastAnimationTime;
 
     protected Random mRandom;
-//    private boolean mEndOfRefreshing;
+//    protected boolean mEndOfRefreshing;
 
     //KEY: Y position, Value: X offset of wind
     protected Map<Float, Float> mWinds;
@@ -97,6 +99,8 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
     protected boolean mNewWindSet;
     protected boolean mInverseDirection;
     protected float mFinishTransformation;
+    protected int mBackgroundColor;
+    protected RefreshKernel mKernel;
 
     protected enum AnimationPart {
         FIRST,
@@ -112,16 +116,11 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
     }
 
     public TaurusHeader(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public TaurusHeader(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+        super(context, attrs, 0);
 
         final View thisView = this;
-        final DensityUtil density = new DensityUtil();
 
-        thisView.setMinimumHeight(density.dip2px(100));
+        thisView.setMinimumHeight(SmartUtil.dp2px(100));
 
         mMatrix = new Matrix();
         mWinds = new HashMap<>();
@@ -129,10 +128,10 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
 
         mWindPaint = new Paint();
         mWindPaint.setColor(0xffffffff);
-        mWindPaint.setStrokeWidth(density.dip2px(3));
+        mWindPaint.setStrokeWidth(SmartUtil.dp2px(3));
         mWindPaint.setAlpha(50);
 
-        mSpinnerStyle = SpinnerStyle.Scale;
+        mSpinnerStyle = SpinnerStyle.FixedBehind;
 
         //<editor-fold desc="setupAnimations">
         mAnimation = new Animation() {
@@ -147,7 +146,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
         mAnimation.setRepeatMode(Animation.REVERSE);
         mAnimation.setInterpolator(ACCELERATE_DECELERATE_INTERPOLATOR);
         mAnimation.setDuration(ANIMATION_DURATION);
-        //</editor-fold>
+    //</editor-fold>
 
         //<editor-fold desc="setupPathDrawable">
         PathsDrawable airplane = new PathsDrawable();
@@ -166,48 +165,43 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
 
         mAirplane = airplane;
         mCloudCenter = cloudCenter;
-        mAirplane.setBounds(0, 0, density.dip2px(65), density.dip2px(20));
-        mCloudCenter.setBounds(0, 0, density.dip2px(260), density.dip2px(45));
-        //</editor-fold>
+        mAirplane.setBounds(0, 0, SmartUtil.dp2px(65), SmartUtil.dp2px(20));
+        mCloudCenter.setBounds(0, 0, SmartUtil.dp2px(260), SmartUtil.dp2px(45));
+    //</editor-fold>
 
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.TaurusHeader);
 
         int primaryColor = ta.getColor(R.styleable.TaurusHeader_thPrimaryColor, 0);
         if (primaryColor != 0) {
-            thisView.setBackgroundColor(primaryColor);
+            mBackgroundColor = primaryColor;
+//            thisView.setBackgroundColor(primaryColor);
         } else {
-            thisView.setBackgroundColor(0xff11bbff);
+            mBackgroundColor = 0xff11bbff;
+//            thisView.setBackgroundColor(0xff11bbff);
         }
 
         ta.recycle();
 
     }
-
     //</editor-fold>
 
     //<editor-fold desc="RefreshHeader">
+    @Override
+    public void onInitialized(@NonNull RefreshKernel kernel, int height, int maxDragHeight) {
+        mKernel = kernel;
+        kernel.requestDrawBackgroundFor(this, mBackgroundColor);
+    }
 
     @Override
     public void onMoving(boolean isDragging, float percent, int offset, int height, int maxDragHeight) {
+        mHeight = offset;
         mPercent = percent;
         mHeaderHeight = height;
         if (isDragging) {
             mFinishTransformation = 0;
         }
+        this.invalidate();
     }
-
-//    @Override
-//    public void onPulling(float percent, int offset, int height, int maxDragHeight) {
-//        mPercent = percent;
-//        mHeaderHeight = height;
-//        mFinishTransformation = 0;
-//    }
-//
-//    @Override
-//    public void onReleasing(float percent, int offset, int height, int maxDragHeight) {
-//        mPercent = percent;
-//        mHeaderHeight = height;
-//    }
 
     @Override
     public void onStartAnimator(@NonNull RefreshLayout layout, int height, int maxDragHeight) {
@@ -248,25 +242,43 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
      */
     @Override@Deprecated
     public void setPrimaryColors(@ColorInt int ... colors) {
-        final View thisView = this;
-        thisView.setBackgroundColor(colors[0]);
+//        final View thisView = this;
+//        thisView.setBackgroundColor(colors[0]);
+        mBackgroundColor = colors[0];
+        if (mKernel != null) {
+            mKernel.requestDrawBackgroundFor(this, mBackgroundColor);
+        }
     }
-//
-//    @NonNull
-//    @Override
-//    public SpinnerStyle getSpinnerStyle() {
-//        return SpinnerStyle.Scale;
-//    }
     //</editor-fold>
 
     //<editor-fold desc="draw">
-
     @Override
     protected void dispatchDraw(Canvas canvas) {
 
         final View thisView = this;
         final int width = thisView.getWidth();
-        final int height = thisView.getHeight();
+        final int height = mHeight;//thisView.getHeight();
+        //noinspection EqualsBetweenInconvertibleTypes
+        final boolean footer = mKernel != null && (this.equals(mKernel.getRefreshLayout().getRefreshFooter()));
+
+        if (footer) {
+            canvas.save();
+            canvas.translate(0, thisView.getHeight() - mHeight);
+        }
+
+        drawWinds(canvas, width);
+        drawAirplane(canvas, width, height);
+        drawSideClouds(canvas, width, height);
+        drawCenterClouds(canvas, width, height);
+
+        if (footer) {
+            canvas.restore();
+        }
+
+        super.dispatchDraw(canvas);
+    }
+
+    protected void drawWinds(Canvas canvas, int width) {
         if (isRefreshing) {
             // Set up new set of wind
             while (mWinds.size() < WIND_SET_AMOUNT) {
@@ -296,6 +308,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
             }
 
             // Draw current set of wind
+            //noinspection ConstantConditions
             if (mWinds.size() >= WIND_SET_AMOUNT) {
                 for (Map.Entry<Float, Float> wind : mWinds.entrySet()) {
                     drawWind(canvas, wind.getKey(), wind.getValue(), width);
@@ -312,11 +325,6 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
             // needed for checking direction
             mLastAnimationTime = mLoadingAnimationTime;
         }
-        drawAirplane(canvas, width, height);
-        drawSideClouds(canvas, width, height);
-        drawCenterClouds(canvas, width, height);
-
-        super.dispatchDraw(canvas);
     }
 
     /**
@@ -326,19 +334,19 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
      * @param y       - y position fot one of lines
      * @param xOffset - x offset for on of lines
      */
-    private void drawWind(Canvas canvas, float y, float xOffset, int width) {
+    protected void drawWind(Canvas canvas, float y, float xOffset, int width) {
         /* We should multiply current animation time with this coefficient for taking all screen width in time
         Removing slowing of animation with dividing on {@LINK #SLOW_DOWN_ANIMATION_COEFFICIENT}
         And we should don't forget about distance that should "fly" line that depend on screen of device and x offset
         */
-        float cof = (width + xOffset) / (LOADING_ANIMATION_COEFFICIENT / SLOW_DOWN_ANIMATION_COEFFICIENT);
+        float cof = (width + xOffset) / (1f * LOADING_ANIMATION_COEFFICIENT / SLOW_DOWN_ANIMATION_COEFFICIENT);
         float time = mLoadingAnimationTime;
 
         // HORRIBLE HACK FOR REVERS ANIMATION THAT SHOULD WORK LIKE RESTART ANIMATION
         if (mLastAnimationTime - mLoadingAnimationTime > 0) {
             mInverseDirection = true;
             // take time from 0 to end of animation time
-            time = (LOADING_ANIMATION_COEFFICIENT / SLOW_DOWN_ANIMATION_COEFFICIENT) - mLoadingAnimationTime;
+            time = (1f * LOADING_ANIMATION_COEFFICIENT / SLOW_DOWN_ANIMATION_COEFFICIENT) - mLoadingAnimationTime;
         } else {
             mNewWindSet = true;
             mInverseDirection = false;
@@ -352,7 +360,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
         canvas.drawLine(x, y, xEnd, y, mWindPaint);
     }
 
-    private void drawSideClouds(Canvas canvas, int width, int height) {
+    protected void drawSideClouds(Canvas canvas, int width, int height) {
         Matrix matrix = mMatrix;
         matrix.reset();
 
@@ -388,12 +396,12 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
 //            needMoveCloudsWithContent = true;
 //        }
 
-        float offsetLeftX = 0 - mCloudLeft.getBounds().width() / 2;
+        float offsetLeftX = 0 - mCloudLeft.getBounds().width() / 2f;
         float offsetLeftY = (//needMoveCloudsWithContent
                 //? mHeaderHeight * dragPercent - mCloudLeftgetBounds().height() :
                 dragYOffset);
 
-        float offsetRightX = width - mCloudRight.getBounds().width() / 2;
+        float offsetRightX = width - mCloudRight.getBounds().width() / 2f;
         float offsetRightY = (//needMoveCloudsWithContent
                 //? mHeaderHeight * dragPercent - mCloudRightgetBounds().height() :
                 dragYOffset);
@@ -425,7 +433,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
         final int saveCount = canvas.getSaveCount();
         canvas.save();
         canvas.translate(offsetLeftX, offsetLeftY);
-        matrix.postScale(scale, scale, mCloudLeft.getBounds().width() * 3 / 4, mCloudLeft.getBounds().height());
+        matrix.postScale(scale, scale, mCloudLeft.getBounds().width() * 3 / 4f, mCloudLeft.getBounds().height());
         canvas.concat(matrix);
         mCloudLeft.setAlpha(100);
         mCloudLeft.draw(canvas);
@@ -441,7 +449,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
         canvas.restoreToCount(saveCount);
     }
 
-    private void drawCenterClouds(Canvas canvas, int width, int height) {
+    protected void drawCenterClouds(Canvas canvas, int width, int height) {
         Matrix matrix = mMatrix;
         matrix.reset();
         float dragPercent = Math.min(1f, Math.abs(mPercent));
@@ -482,9 +490,9 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
             parallaxPercent = dragYOffset - startParallaxHeight;
         }
 
-        float offsetX = (width / 2) - mCloudCenter.getBounds().width() / 2;
+        float offsetX = (width / 2f) - mCloudCenter.getBounds().width() / 2f;
         float offsetY = dragYOffset
-                - (parallax ? mCloudCenter.getBounds().height()/2 + parallaxPercent : mCloudCenter.getBounds().height()/2);
+                - (parallax ? mCloudCenter.getBounds().height()/2f + parallaxPercent : mCloudCenter.getBounds().height()/2f);
 
         float sx = overDrag ? scale + overDragPercent / 4 : scale;
         float sy = overDrag ? scale + overDragPercent / 2 : scale;
@@ -503,7 +511,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
         }
 
 
-        matrix.postScale(sx, sy, mCloudCenter.getBounds().width() / 2, 0);
+        matrix.postScale(sx, sy, mCloudCenter.getBounds().width() / 2f, 0);
 
         if (offsetY + sy * mCloudCenter.getBounds().height() < height + 2) {
             offsetY = height + 2 - sy * mCloudCenter.getBounds().height();
@@ -517,7 +525,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
         canvas.restoreToCount(saveCount);
     }
 
-    private void drawAirplane(Canvas canvas, int width, int height) {
+    protected void drawAirplane(Canvas canvas, int width, int height) {
         Matrix matrix = mMatrix;
         matrix.reset();
 
@@ -536,8 +544,8 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
             dragPercent = 1.0f;
         }
 
-        float offsetX = ((width * dragPercent) / 2) - mAirplane.getBounds().width() / 2;
-        float offsetY = mHeaderHeight * (1 - dragPercent/2) - mAirplane.getBounds().height() / 2;
+        float offsetX = ((width * dragPercent) / 2) - mAirplane.getBounds().width() / 2f;
+        float offsetY = mHeaderHeight * (1 - dragPercent/2) - mAirplane.getBounds().height() / 2f;
 
         if (mFinishTransformation > 0) {
             offsetY += (0 - offsetY) * mFinishTransformation;
@@ -558,8 +566,8 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
 
         if (rotateAngle > 0) {
             matrix.postRotate(rotateAngle,
-                    mAirplane.getBounds().width() / 2,
-                    mAirplane.getBounds().height() / 2);
+                    mAirplane.getBounds().width() / 2f,
+                    mAirplane.getBounds().height() / 2f);
         }
 
         final int saveCount = canvas.getSaveCount();
@@ -571,9 +579,8 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
     }
     //</editor-fold>
 
-    //<editor-fold desc="private">
-
-    private float random(int min, int max) {
+    //<editor-fold desc="internal">
+    protected float random(int min, int max) {
         // nextInt is normally exclusive of the top value,
         // so add 1 to make it inclusive
         return mRandom.nextInt((max - min) + 1) + min;
@@ -585,7 +592,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
      * @param part - needed part
      * @return - value for needed part
      */
-    private float getAnimationPartValue(AnimationPart part) {
+    protected float getAnimationPartValue(AnimationPart part) {
         switch (part) {
             case FIRST: {
                 return mLoadingAnimationTime;
@@ -610,7 +617,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
      * @param part - needed part of animation
      * @return - return true if current part
      */
-    private boolean checkCurrentAnimationPart(AnimationPart part) {
+    protected boolean checkCurrentAnimationPart(AnimationPart part) {
         switch (part) {
             case FIRST: {
                 return mLoadingAnimationTime < getAnimationTimePart(AnimationPart.FOURTH);
@@ -633,7 +640,7 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
      * @param part - needed part of time
      * @return - interval of time
      */
-    private int getAnimationTimePart(AnimationPart part) {
+    protected int getAnimationTimePart(AnimationPart part) {
         switch (part) {
             case SECOND: {
                 return LOADING_ANIMATION_COEFFICIENT / 2;
@@ -648,6 +655,5 @@ public class TaurusHeader extends InternalAbstract implements RefreshHeader {
                 return 0;
         }
     }
-
     //</editor-fold>
 }

@@ -25,17 +25,16 @@ import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.RefreshState;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
 import com.scwang.smartrefresh.layout.internal.InternalAbstract;
-import com.scwang.smartrefresh.layout.util.DensityUtil;
+import com.scwang.smartrefresh.layout.util.SmartUtil;
 
 /**
  * DropBoxRefresh
- * Created by SCWANG on 2017/6/24.
+ * Created by scwang on 2017/6/24.
  * design https://dribbble.com/shots/3470499-DropBox-Refresh
  */
-
 public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
 
-
+    //<editor-fold desc="static">
     protected static String[] drawable1Paths = new String[]{
             "M3 2h18v20h-18z",
             "m4,1c-1.105,0 -2,0.895 -2,2v3,11 3,1c0,1.105 0.895,2 2,2h2,12 2c1.105,0 2,-0.895 2,-2v-1,-3 -11,-3c0,-1.105 -0.895,-2 -2,-2h-2,-12 -2zM3.5,3h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM19.5,3h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM3.5,6h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM19.5,6h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM3.5,9h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM19.5,9h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM3.5,12h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM19.5,12h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM3.5,15h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM19.5,15h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM3.5,18h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5zM19.5,18h1c0.276,0 0.5,0.224 0.5,0.5v1c0,0.276 -0.224,0.5 -0.5,0.5h-1c-0.276,0 -0.5,-0.224 -0.5,-0.5v-1c0,-0.276 0.224,-0.5 0.5,-0.5z"
@@ -63,13 +62,16 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
     protected static int[] drawable3Colors = new int[]{
             0xff98d761
     };
+    //</editor-fold>
 
     //<editor-fold desc="Field">
     protected Path mPath;
     protected Paint mPaint;
     protected BoxBody mBoxBody;
+    protected int mHeight;
     protected int mAccentColor;
     protected int mHeaderHeight;
+    protected int mBackgroundColor;
     protected boolean mDropOutOverFlow;
     protected Drawable mDrawable1;
     protected Drawable mDrawable2;
@@ -79,6 +81,7 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
     protected ValueAnimator mReboundAnimator;
     protected ValueAnimator mDropOutAnimator;
     protected RefreshState mState;
+    protected RefreshKernel mKernel;
     //</editor-fold>
 
     //<editor-fold desc="View">
@@ -87,22 +90,18 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
     }
 
     public DropBoxHeader(Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public DropBoxHeader(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+        super(context, attrs, 0);
 
         mPath = new Path();
         mPaint = new Paint();
         mBoxBody = new BoxBody();
         mPaint.setAntiAlias(true);
         mAccentColor = 0xff6ea9ff;
+        mBackgroundColor = 0xff283645;
         final View thisView = this;
-        thisView.setBackgroundColor(0xff283645);
-        thisView.setMinimumHeight(DensityUtil.dp2px(150));
+        thisView.setMinimumHeight(SmartUtil.dp2px(150));
 
-        mSpinnerStyle = SpinnerStyle.Scale;
+        mSpinnerStyle = SpinnerStyle.FixedBehind;
 
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.DropBoxHeader);
         if (ta.hasValue(R.styleable.DropBoxHeader_dhDrawable1)) {
@@ -219,9 +218,16 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
 
         final View thisView = this;
         final int width = thisView.getWidth();
-        final int height = thisView.getHeight();
-
+        final int height = mHeight;//thisView.getHeight();
         final int sideLength = generateSideLength();
+        //noinspection EqualsBetweenInconvertibleTypes
+        final boolean footer = mKernel != null && (this.equals(mKernel.getRefreshLayout().getRefreshFooter()));
+
+        if (footer) {
+            canvas.save();
+            canvas.translate(0, thisView.getHeight() - mHeight);
+        }
+
         BoxBody body = generateBoxBody(width, height, sideLength);
 
         mPaint.setColor(ColorUtils.setAlphaComponent(mAccentColor, 150));
@@ -263,18 +269,21 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
             }
         }
 
+        if (footer) {
+            canvas.restore();
+        }
+
         super.dispatchDraw(canvas);
     }
-
     //</editor-fold>
 
     //<editor-fold desc="路径绘制">
-    private int generateSideLength() {
+    protected int generateSideLength() {
         return mHeaderHeight / 5;
     }
 
     @NonNull
-    private Path generateClipPath(BoxBody body, int width) {
+    protected Path generateClipPath(BoxBody body, int width) {
         mPath.reset();
         mPath.lineTo(0, body.boxCenterTop);
         mPath.lineTo(body.boxLeft, body.boxCenterTop);
@@ -287,13 +296,13 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
     }
 
     @NonNull
-    private BoxBody generateBoxBody(int width, int height, int sideLength) {
+    protected BoxBody generateBoxBody(int width, int height, int sideLength) {
         final int margin = sideLength / 2;
         return mBoxBody.measure(width, height, sideLength, margin);
     }
 
     @NonNull
-    private Path generateBoxCoverPath(BoxBody body) {
+    protected Path generateBoxCoverPath(BoxBody body) {
         mPath.reset();
         final int sideLength = (body.boxCenterX - body.boxLeft) * 4 / 5;
 
@@ -316,8 +325,8 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
         final float offsetLeftBottomX = sideLength * (float) Math.sin(Math.PI / 3 + offsetAngle);
         final float offsetLeftBottomY = sideLength * (float) Math.cos(Math.PI / 3 + offsetAngle);
         mPath.moveTo(body.boxLeft, body.boxCenterTop);
-        mPath.lineTo(body.boxCenterX, (body.boxBottom + body.boxTop) / 2);
-        mPath.lineTo(body.boxCenterX - offsetLeftBottomX, (body.boxBottom + body.boxTop) / 2 + offsetLeftBottomY);
+        mPath.lineTo(body.boxCenterX, (body.boxBottom + body.boxTop) / 2f);
+        mPath.lineTo(body.boxCenterX - offsetLeftBottomX, (body.boxBottom + body.boxTop) / 2f + offsetLeftBottomY);
         mPath.lineTo(body.boxLeft - offsetLeftBottomX, body.boxCenterTop + offsetLeftBottomY);
         mPath.close();
 
@@ -338,8 +347,8 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
         final float offsetRightBottomX = sideLength * (float) Math.sin(Math.PI / 3 + offsetAngle);
         final float offsetRightBottomY = sideLength * (float) Math.cos(Math.PI / 3 + offsetAngle);
         mPath.moveTo(body.boxRight, body.boxCenterTop);
-        mPath.lineTo(body.boxCenterX, (body.boxBottom + body.boxTop) / 2);
-        mPath.lineTo(body.boxCenterX + offsetRightBottomX, (body.boxBottom + body.boxTop) / 2 + offsetRightBottomY);
+        mPath.lineTo(body.boxCenterX, (body.boxBottom + body.boxTop) / 2f);
+        mPath.lineTo(body.boxCenterX + offsetRightBottomX, (body.boxBottom + body.boxTop) / 2f + offsetRightBottomY);
         mPath.lineTo(body.boxRight + offsetRightBottomX, body.boxCenterTop + offsetRightBottomY);
         mPath.close();
 
@@ -347,16 +356,16 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
     }
 
     @NonNull
-    private Path generateBoxBodyPath(BoxBody body) {
+    protected Path generateBoxBodyPath(BoxBody body) {
         mPath.reset();
 
         mPath.moveTo(body.boxLeft, body.boxCenterBottom);
         mPath.lineTo(body.boxCenterX, body.boxBottom);
         mPath.lineTo(body.boxRight, body.boxCenterBottom);
-        mPath.quadTo(body.boxRight + body.boxSideLength / 2 * mReboundPercent, body.boxCenterY, body.boxRight, body.boxCenterTop);
+        mPath.quadTo(body.boxRight + body.boxSideLength / 2f * mReboundPercent, body.boxCenterY, body.boxRight, body.boxCenterTop);
         mPath.lineTo(body.boxCenterX, body.boxTop);
         mPath.lineTo(body.boxLeft, body.boxCenterTop);
-        mPath.quadTo(body.boxLeft - body.boxSideLength / 2 * mReboundPercent, body.boxCenterY, body.boxLeft, body.boxCenterBottom);
+        mPath.quadTo(body.boxLeft - body.boxSideLength / 2f * mReboundPercent, body.boxCenterY, body.boxLeft, body.boxCenterBottom);
 
         mPath.close();
         return mPath;
@@ -364,26 +373,25 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
     //</editor-fold>
 
     //<editor-fold desc="RefreshHeader">
-
+    @Override
+    public void onInitialized(@NonNull RefreshKernel kernel, int height, int maxDragHeight) {
+        mKernel = kernel;
+        mHeaderHeight = height;
+        kernel.requestDrawBackgroundFor(this, mBackgroundColor);
+        final int sideLength = generateSideLength();
+        mDrawable1.setBounds(0, 0, sideLength, sideLength);
+        mDrawable2.setBounds(0, 0, sideLength, sideLength);
+        mDrawable3.setBounds(0, 0, sideLength, sideLength);
+    }
 
     @Override
     public void onMoving(boolean isDragging, float percent, int offset, int height, int maxDragHeight) {
+        mHeight = offset;
         if (!isDragging || mState != RefreshState.Refreshing) {
             mReboundPercent = 1f * Math.max(0, offset - height) / maxDragHeight;
         }
+        this.invalidate();
     }
-
-//    @Override
-//    public void onPulling(float percent, int offset, int height, int maxDragHeight) {
-//        if (mState != RefreshState.Refreshing) {
-//            mReboundPercent = 1f * Math.max(0, offset - height) / maxDragHeight;
-//        }
-//    }
-//
-//    @Override
-//    public void onReleasing(float percent, int offset, int height, int maxDragHeight) {
-//        mReboundPercent = 1f * Math.max(0, offset - height) / maxDragHeight;
-//    }
 
     @Override
     public void onStateChanged(@NonNull RefreshLayout refreshLayout, @NonNull RefreshState oldState, @NonNull RefreshState newState) {
@@ -393,12 +401,6 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
         }
     }
 
-//    @NonNull
-//    @Override
-//    public SpinnerStyle getSpinnerStyle() {
-//        return SpinnerStyle.Scale;
-//    }
-
     /**
      * @param colors 对应Xml中配置的 srlPrimaryColor srlAccentColor
      * @deprecated 请使用 {@link RefreshLayout#setPrimaryColorsId(int...)}
@@ -406,21 +408,14 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
     @Override@Deprecated
     public void setPrimaryColors(@ColorInt int ... colors) {
         if (colors.length > 0) {
-            final View thisView = this;
-            thisView.setBackgroundColor(colors[0]);
+            mBackgroundColor = colors[0];
+            if (mKernel != null) {
+                mKernel.requestDrawBackgroundFor(this, mBackgroundColor);
+            }
             if (colors.length > 1) {
                 mAccentColor = colors[1];
             }
         }
-    }
-
-    @Override
-    public void onInitialized(@NonNull RefreshKernel kernel, int height, int maxDragHeight) {
-        mHeaderHeight = height;
-        final int sideLength = generateSideLength();
-        mDrawable1.setBounds(0, 0, sideLength, sideLength);
-        mDrawable2.setBounds(0, 0, sideLength, sideLength);
-        mDrawable3.setBounds(0, 0, sideLength, sideLength);
     }
 
     @Override
@@ -437,7 +432,7 @@ public class DropBoxHeader extends InternalAbstract implements RefreshHeader {
     }
     //</editor-fold>
 
-    private static class BoxBody {
+    protected static class BoxBody {
 
         int boxCenterX;
         int boxCenterY;

@@ -21,14 +21,14 @@ import com.scwang.smartrefresh.layout.api.RefreshHeader;
 import com.scwang.smartrefresh.layout.api.RefreshKernel;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.internal.InternalAbstract;
-import com.scwang.smartrefresh.layout.util.DensityUtil;
+import com.scwang.smartrefresh.layout.util.SmartUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * StoreHouseHeader
- * Created by SCWANG on 2017/5/31.
+ * Created by scwang on 2017/5/31.
  * from https://github.com/liaohuqiu/android-Ultra-Pull-To-Refresh
  */
 @SuppressWarnings({"unused", "UnusedReturnValue", "SameParameterValue"})
@@ -37,11 +37,11 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
     //<editor-fold desc="Field">
     public List<StoreHouseBarItem> mItemList = new ArrayList<>();
 
-    protected int mLineWidth = -1;
     protected float mScale = 1;
+    protected int mLineWidth = -1;
     protected int mDropHeight = -1;
-    protected static final float mInternalAnimationFactor = 0.7f;
     protected int mHorizontalRandomness = -1;
+    protected static final float mInternalAnimationFactor = 0.7f;
 
     protected float mProgress = 0;
 
@@ -73,15 +73,10 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
     }
 
     public StoreHouseHeader(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
+        super(context, attrs, 0);
 
-    public StoreHouseHeader(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-
-        DensityUtil density = new DensityUtil();
-        mLineWidth = density.dip2px(1);
-        mDropHeight = density.dip2px(40);
+        mLineWidth = SmartUtil.dp2px(1);
+        mDropHeight = SmartUtil.dp2px(40);
         mHorizontalRandomness = Resources.getSystem().getDisplayMetrics().widthPixels / 2;
         mBackgroundColor = 0xff333333;
         setTextColor(0xffcccccc);
@@ -98,14 +93,12 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
         ta.recycle();
 
         final View thisView = this;
-        thisView.setMinimumHeight(mDrawZoneHeight + DensityUtil.dp2px(40));
+        thisView.setMinimumHeight(mDrawZoneHeight + SmartUtil.dp2px(40));
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final View thisView = this;
-//        int height = getTopOffset() + mDrawZoneHeight + getBottomOffset();
-//        heightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
         super.setMeasuredDimension(
                 View.resolveSize(super.getSuggestedMinimumWidth(), widthMeasureSpec),
                 View.resolveSize(super.getSuggestedMinimumHeight(), heightMeasureSpec));
@@ -174,11 +167,9 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
 
         super.dispatchDraw(canvas);
     }
-
     //</editor-fold>
 
     //<editor-fold desc="API">
-
     public StoreHouseHeader setLoadingAniDuration(int duration) {
         mLoadingAniDuration = duration;
         mLoadingAniSegDuration = duration;
@@ -244,11 +235,10 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
         float drawHeight = 0;
         boolean shouldLayout = mItemList.size() > 0;
         mItemList.clear();
-        DensityUtil density = new DensityUtil();
         for (int i = 0; i < pointList.size(); i++) {
             float[] line = pointList.get(i);
-            PointF startPoint = new PointF(density.dip2px(line[0]) * mScale, density.dip2px(line[1]) * mScale);
-            PointF endPoint = new PointF(density.dip2px(line[2]) * mScale, density.dip2px(line[3]) * mScale);
+            PointF startPoint = new PointF(SmartUtil.dp2px(line[0]) * mScale, SmartUtil.dp2px(line[1]) * mScale);
+            PointF endPoint = new PointF(SmartUtil.dp2px(line[2]) * mScale, SmartUtil.dp2px(line[3]) * mScale);
 
             drawWidth = Math.max(drawWidth, startPoint.x);
             drawWidth = Math.max(drawWidth, endPoint.x);
@@ -271,10 +261,8 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
     //</editor-fold>
 
     //<editor-fold desc="RefreshHeader">
-
     @Override
     public void onInitialized(@NonNull RefreshKernel kernel, int height, int maxDragHeight) {
-//        kernel.requestDrawBackgroundForHeader(mBackgroundColor);
         mRefreshKernel = kernel;
         mRefreshKernel.requestDrawBackgroundFor(this, mBackgroundColor);
     }
@@ -285,17 +273,6 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
         final View thisView = this;
         thisView.invalidate();
     }
-
-//    @Override
-//    public void onPulling(float percent, int offset, int height, int maxDragHeight) {
-//        mProgress = (percent * .8f);
-//        invalidate();
-//    }
-//
-//    @Override
-//    public void onReleasing(float percent, int offset, int height, int maxDragHeight) {
-//        onPulling(percent, offset, height, maxDragHeight);
-//    }
 
     @Override
     public void onReleased(@NonNull RefreshLayout layout, int height, int maxDragHeight) {
@@ -345,7 +322,6 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
         if (colors.length > 0) {
             mBackgroundColor = colors[0];
             if (mRefreshKernel != null) {
-//                mRefreshKernel.requestDrawBackgroundForHeader(colors[0]);
                 mRefreshKernel.requestDrawBackgroundFor(this, mBackgroundColor);
             }
             if (colors.length > 1) {
@@ -353,10 +329,9 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
             }
         }
     }
-
     //</editor-fold>
 
-    private class AniController implements Runnable {
+    protected class AniController implements Runnable {
 
         int mTick = 0;
         int mCountPerSeg = 0;
@@ -364,7 +339,7 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
         int mInterval = 0;
         boolean mRunning = true;
 
-        private void start() {
+        protected void start() {
             mRunning = true;
             mTick = 0;
 
@@ -402,7 +377,7 @@ public class StoreHouseHeader extends InternalAbstract implements RefreshHeader 
             }
         }
 
-        private void stop() {
+        protected void stop() {
             mRunning = false;
             final View thisView = StoreHouseHeader.this;
             thisView.removeCallbacks(this);

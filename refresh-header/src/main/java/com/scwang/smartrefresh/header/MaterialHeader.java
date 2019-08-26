@@ -9,6 +9,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -23,18 +24,18 @@ import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.RefreshState;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
 import com.scwang.smartrefresh.layout.internal.InternalAbstract;
-import com.scwang.smartrefresh.layout.util.DensityUtil;
 import com.scwang.smartrefresh.layout.util.SmartUtil;
 
 import static android.view.View.MeasureSpec.getSize;
 
 /**
  * Material 主题下拉头
- * Created by SCWANG on 2017/6/2.
+ * Created by scwang on 2017/6/2.
  */
 @SuppressWarnings("unused")
 public class MaterialHeader extends InternalAbstract implements RefreshHeader {
 
+    //<editor-fold desc="field">
     // Maps to ProgressBar.Large style
     public static final int SIZE_LARGE = 0;
     // Maps to ProgressBar default style
@@ -59,8 +60,10 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
     protected int mHeadHeight;
     protected Path mBezierPath;
     protected Paint mBezierPaint;
-    protected boolean mShowBezierWave = false;
     protected RefreshState mState;
+    protected boolean mShowBezierWave = false;
+    protected boolean mScrollableWhenRefreshing = true;
+    //</editor-fold>
 
     //<editor-fold desc="MaterialHeader">
     public MaterialHeader(Context context) {
@@ -68,16 +71,12 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
     }
 
     public MaterialHeader(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public MaterialHeader(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+        super(context, attrs, 0);
 
         mSpinnerStyle = SpinnerStyle.MatchLayout;
         final View thisView = this;
         final ViewGroup thisGroup = this;
-        thisView.setMinimumHeight(DensityUtil.dp2px(100));
+        thisView.setMinimumHeight(SmartUtil.dp2px(100));
 
         mProgress = new MaterialProgressDrawable(this);
         mProgress.setBackgroundColor(CIRCLE_BG_LIGHT);
@@ -98,6 +97,7 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
 
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.MaterialHeader);
         mShowBezierWave = ta.getBoolean(R.styleable.MaterialHeader_mhShowBezierWave, mShowBezierWave);
+        mScrollableWhenRefreshing = ta.getBoolean(R.styleable.MaterialHeader_mhScrollableWhenRefreshing, mScrollableWhenRefreshing);
         mBezierPaint.setColor(ta.getColor(R.styleable.MaterialHeader_mhPrimaryColor, 0xff11bbff));
         if (ta.hasValue(R.styleable.MaterialHeader_mhShadowRadius)) {
             int radius = ta.getDimensionPixelOffset(R.styleable.MaterialHeader_mhShadowRadius, 0);
@@ -115,8 +115,6 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
         final View circleView = mCircleView;
         circleView.measure(MeasureSpec.makeMeasureSpec(mCircleDiameter, MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(mCircleDiameter, MeasureSpec.EXACTLY));
-//        setMeasuredDimension(resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec),
-//                resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec));
     }
 
     @Override
@@ -155,13 +153,12 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
             mBezierPath.lineTo(0, mHeadHeight);
             //绘制贝塞尔曲线
             final View thisView = this;
-            mBezierPath.quadTo(thisView.getMeasuredWidth() / 2, mHeadHeight + mWaveHeight * 1.9f, thisView.getMeasuredWidth(), mHeadHeight);
+            mBezierPath.quadTo(thisView.getMeasuredWidth() / 2f, mHeadHeight + mWaveHeight * 1.9f, thisView.getMeasuredWidth(), mHeadHeight);
             mBezierPath.lineTo(thisView.getMeasuredWidth(), 0);
             canvas.drawPath(mBezierPath, mBezierPaint);
         }
         super.dispatchDraw(canvas);
     }
-
     //</editor-fold>
 
     //<editor-fold desc="RefreshHeader">
@@ -179,6 +176,10 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
 
     @Override
     public void onMoving(boolean isDragging, float percent, int offset, int height, int maxDragHeight) {
+        if (mState == RefreshState.Refreshing) {
+            return;
+        }
+
         if (mShowBezierWave) {
             mHeadHeight = Math.min(offset, height);
             mWaveHeight = Math.max(0, offset - height);
@@ -209,64 +210,15 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
             }
 
             final View circleView = mCircleView;
-            float targetY = offset / 2 + mCircleDiameter / 2;
+            float targetY = offset / 2f + mCircleDiameter / 2f;
             circleView.setTranslationY(Math.min(offset, targetY));
             circleView.setAlpha(Math.min(1f, 4f * offset / mCircleDiameter));
         }
     }
 
-//    @Override
-//    public void onPulling(float percent, int offset, int height, int maxDragHeight) {
-//        if (mShowBezierWave) {
-//            mHeadHeight = Math.min(offset, height);
-//            mWaveHeight = Math.max(0, offset - height);
-//            postInvalidate();
-//        }
-//
-//        if (mState != RefreshState.Refreshing) {
-//            float originalDragPercent = 1f * offset / height;
-//
-//            float dragPercent = Math.min(1f, Math.abs(originalDragPercent));
-//            float adjustedPercent = (float) Math.max(dragPercent - .4, 0) * 5 / 3;
-//            float extraOS = Math.abs(offset) - height;
-//            float tensionSlingshotPercent = Math.max(0, Math.min(extraOS, (float) height * 2)
-//                    / (float) height);
-//            float tensionPercent = (float) ((tensionSlingshotPercent / 4) - Math.pow(
-//                    (tensionSlingshotPercent / 4), 2)) * 2f;
-//            float strokeStart = adjustedPercent * .8f;
-//            mProgress.showArrow(true);
-//            mProgress.setStartEndTrim(0f, Math.min(MAX_PROGRESS_ANGLE, strokeStart));
-//            mProgress.setArrowScale(Math.min(1f, adjustedPercent));
-//
-//            float rotation = (-0.25f + .4f * adjustedPercent + tensionPercent * 2) * .5f;
-//            mProgress.setProgressRotation(rotation);
-//            mCircleView.setAlpha(Math.min(1f, originalDragPercent*2));
-//        }
-//
-//        float targetY = offset / 2 + mCircleDiameter / 2;
-//        mCircleView.setTranslationY(Math.min(offset, targetY));//setTargetOffsetTopAndBottom(targetY - mCurrentTargetOffsetTop, true /* requires update */);
-//    }
-//
-//    @Override
-//    public void onReleasing(float percent, int offset, int height, int maxDragHeight) {
-//        if (!mProgress.isRunning() && !mFinished) {
-//            onPulling(percent, offset, height, maxDragHeight);
-//        } else {
-//            if (mShowBezierWave) {
-//                mHeadHeight = Math.min(offset, height);
-//                mWaveHeight = Math.max(0, offset - height);
-//                postInvalidate();
-//            }
-//        }
-//    }
-
     @Override
     public void onReleased(@NonNull RefreshLayout layout, int height, int maxDragHeight) {
         mProgress.start();
-//        final View circleView = mCircleView;
-//        if ((int) circleView.getTranslationY() != height / 2 + mCircleDiameter / 2) {
-//            circleView.animate().translationY(height / 2 + mCircleDiameter / 2);
-//        }
     }
 
     @Override
@@ -310,15 +262,32 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
         }
     }
 
-//    @NonNull
-//    @Override
-//    public SpinnerStyle getSpinnerStyle() {
-//        return SpinnerStyle.MatchLayout;
-//    }
     //</editor-fold>
 
-
     //<editor-fold desc="API">
+    /**
+     * Set the background color of the progress spinner disc.
+     *
+     * @param colorRes Resource id of the color.
+     */
+    public MaterialHeader setProgressBackgroundColorSchemeResource(@ColorRes int colorRes) {
+        final View thisView = this;
+        final Context context = thisView.getContext();
+        final int color = ContextCompat.getColor(context, colorRes);
+        return setProgressBackgroundColorSchemeColor(color);
+    }
+
+    /**
+     * Set the background color of the progress spinner disc.
+     *
+     * @param color 颜色
+     */
+    public MaterialHeader setProgressBackgroundColorSchemeColor(@ColorInt int color) {
+        final View circle = mCircleView;
+        circle.setBackgroundColor(color);
+        mProgress.setBackgroundColor(color);
+        return this;
+    }
 
     /**
      * 设置 ColorScheme
@@ -340,7 +309,7 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
         final Context context = thisView.getContext();
         int[] colors = new int[colorIds.length];
         for (int i = 0; i < colorIds.length; i++) {
-            colors[i] = SmartUtil.getColor(context, colorIds[i]);
+            colors[i] = ContextCompat.getColor(context, colorIds[i]);
         }
         return setColorSchemeColors(colors);
     }
@@ -380,5 +349,13 @@ public class MaterialHeader extends InternalAbstract implements RefreshHeader {
         return this;
     }
 
+    /**
+     * 设置实在正在刷新的时候可以 上下滚动 Header
+     * @param scrollable 是否支持滚动
+     */
+    public MaterialHeader setScrollableWhenRefreshing(boolean scrollable) {
+        this.mScrollableWhenRefreshing = scrollable;
+        return this;
+    }
     //</editor-fold>
 }
